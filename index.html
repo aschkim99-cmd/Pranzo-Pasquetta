@@ -484,14 +484,23 @@
      let users = [];
 let party = {};
 
-async function loadSharedData() {
+async function loadData() {
   try {
     const response = await fetch('data.json');
-    const data = await response.json();
-    users = data.users;
-    party = data.party;
-  } catch (e) {
-    console.error('Errore data.json');
+    if (!response.ok) throw new Error('data.json non trovato');
+    const dati = await response.json();
+    
+    // ✅ SALVA GLOBALE per tutto il codice
+    window.utenti = dati.utenti || {};
+    
+    console.log('✅ Data caricata:', Object.keys(window.utenti));
+  } catch (error) {
+    console.error('❌ Errore data.json:', error);
+    // Fallback demo
+    window.utenti = {
+      1: {nome: "Marco", frase: "Pranzo fantastico!"},
+      2: {nome: "Luca", frase: "Buon Pasquetta!"}
+    };
   }
 }
 
