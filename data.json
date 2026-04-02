@@ -1,0 +1,22 @@
+ {
+  "users": [
+    {
+      "id": 1,
+      "nome": "Marco",
+      "numero": 1,
+      "importo": 0,
+      "phrase": "Per te il sistema segnala una lieve ma concreta esposizione verso la carne alla brace."
+    },
+    {
+      "id": 2,
+      "nome": "Giulia",
+      "numero": 2,
+      "importo": 0,
+      "phrase": "Giulia, il sistema ti vede dentro al pranzo di Pasquetta."
+    }
+  ],
+  "party": {
+    "phrase": "Benvenuti al pranzo di Pasquetta!",
+    "importoTotale": 0
+  }
+}
