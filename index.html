@@ -476,387 +476,105 @@
       </section>
     </main>
   </div>
-    <script>
-    const STORAGE_KEY = 'pasquettaAppUsers_v2';
-    const SETTINGS_KEY = 'pasquettaAppSettings_v2';
+    <!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pranzo Pasquetta</title>
+</head>
+<body>
+  <h1>Pranzo di Pasquetta</h1>
+  <div id="login">
+    <label>Numero di accesso: </label>
+    <input type="number" id="input-number" />
+    <button id="btn-login">Verifica accesso</button>
+  </div>
+  <div id="error" style="color: red; display: none;"></div>
+  <div id="content" style="display: none;">
+    <p id="nome-pasquetta"></p>
+    <p id="frase-pasquetta"></p>
+  </div>
 
-    const defaultUsers = [
-     let users = [];
-let party = {};
+  <script>
+    // INPUT
+    const inputNumber = document.getElementById("input-number");
+    const btnLogin    = document.getElementById("btn-login");
+    const errorEl     = document.getElementById("error");
+    const contentEl   = document.getElementById("content");
+    const nomeEl      = document.getElementById("nome-pasquetta");
+    const fraseEl     = document.getElementById("frase-pasquetta");
 
-async function loadData() {
-  try {
-    const response = await fetch('data.json');
-    if (!response.ok) throw new Error('data.json non trovato');
-    const dati = await response.json();
-    
-    // ✅ SALVA GLOBALE per tutto il codice
-    window.utenti = dati.utenti || {};
-    
-    console.log('✅ Data caricata:', Object.keys(window.utenti));
-  } catch (error) {
-    console.error('❌ Errore data.json:', error);
-    // Fallback demo
-    window.utenti = {
-      1: {nome: "Marco", frase: "Pranzo fantastico!"},
-      2: {nome: "Luca", frase: "Buon Pasquetta!"}
-    };
-  }
-}
-
-loadSharedData();
-    ];
-    const defaultSettings = {
-      adminPhone: '3663594487',
-      adminPassword: 'Blablaric.77'
-    };
-
-    const els = {
-      phoneInput: document.getElementById('phoneInput'),
-      adminPasswordInput: document.getElementById('adminPasswordInput'),
-      adminPasswordWrap: document.getElementById('adminPasswordWrap'),
-      loginForm: document.getElementById('loginForm'),
-      loginStatus: document.getElementById('loginStatus'),
-      loginView: document.getElementById('loginView'),
-      userView: document.getElementById('userView'),
-      adminView: document.getElementById('adminView'),
-      userTitle: document.getElementById('userTitle'),
-      userAmount: document.getElementById('userAmount'),
-      userPhrase: document.getElementById('userPhrase'),
-      backToLoginBtn: document.getElementById('backToLoginBtn'),
-      logoutAdminBtn: document.getElementById('logoutAdminBtn'),
-
-      usersList: document.getElementById('usersList'),
-      usersCount: document.getElementById('usersCount'),
-      adminNumberLabel: document.getElementById('adminNumberLabel'),
-
-      editorForm: document.getElementById('editorForm'),
-      editId: document.getElementById('editId'),
-      editName: document.getElementById('editName'),
-      editPhone: document.getElementById('editPhone'),
-      editAmount: document.getElementById('editAmount'),
-      editPhrase: document.getElementById('editPhrase'),
-      editorTitle: document.getElementById('editorTitle'),
-      editorStatus: document.getElementById('editorStatus'),
-      deleteBtn: document.getElementById('deleteBtn'),
-      duplicateBtn: document.getElementById('duplicateBtn'),
-      newUserBtn: document.getElementById('newUserBtn'),
-      exportBtn: document.getElementById('exportBtn'),
-      themeToggle: document.getElementById('themeToggle')
+    // --- dati di fallback (demo) ---
+    const fallbackData = {
+      "nome": "Riccardo",
+      "frase": "Buona Pasquetta con famiglia e amici!"
     };
 
-    let users = loadUsers();
-    let settings = loadSettings();
-    let selectedUserId = null;
-          function loadUsers() {
+    // --- funzione principale: login + lettura json ---
+    async function verificaAccesso() {
+      // nascondi messaggi precedenti
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+      contentEl.style.display = "none";
+
+      // leggi numero inserito
+      const numeroInserito = parseInt(inputNumber.value, 10);
+      if (isNaN(numeroInserito)) {
+        showError("Inserisci un numero valido.");
+        return;
+      }
+
+      // lista di numeri validi (esempio, da sostituire con i tuoi)
+      const numeriValidi = [123, 456, 789]; // <-- cambiala con i tuoi numeri
+      if (!numeriValidi.includes(numeroInserito)) {
+        showError("Numero non valido.");
+        return;
+      }
+
+      // tenta di caricare data.json
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : defaultUsers;
-      } catch (err) {
-        return defaultUsers;
-      }
-    }
-
-    function loadSettings() {
-      try {
-        const raw = localStorage.getItem(SETTINGS_KEY);
-        return raw ? JSON.parse(raw) : defaultSettings;
-      } catch (err) {
-        return defaultSettings;
-      }
-    }
-
-    function persist() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    }
-
-    function normalizePhone(value) {
-      return (value || '').replace(/\D/g, '');
-    }
-
-    function formatCurrency(value) {
-      const num = Number(String(value).replace(',', '.'));
-      if (Number.isNaN(num)) return '€ --';
-      return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(num);
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\\"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function renderUsersList() {
-      els.usersCount.textContent = users.length;
-      els.adminNumberLabel.textContent = settings.adminPhone;
-      if (!users.length) {
-        els.usersList.innerHTML = '<div class="empty">Nessun utente presente. Usa il modulo a destra per crearne uno.</div>';
-        return;
-      }
-      els.usersList.innerHTML = users
-        .map(user => `
-        <article class="row">
-          <div class="row-top">
-            <div>
-              <h3>${escapeHtml(user.name)}</h3>
-              <p>${escapeHtml(user.phone)}</p>
-            </div>
-            <span class="pill">${escapeHtml(formatCurrency(user.amount))}</span>
-          </div>
-          <p>${escapeHtml(user.phrase || 'Nessuna frase personalizzata inserita.')}</p>
-          <div class="utility-row" style="margin-top:12px">
-            <button class="ghost" type="button" data-edit-id="${user.id}">Modifica</button>
-            <button class="ghost" type="button" data-preview-id="${user.id}">Anteprima</button>
-          </div>
-        </article>
-      `).join('');
-    }
-
-    function openUserView(user) {
-      els.loginView.classList.add('hidden');
-      els.adminView.classList.add('hidden');
-      els.userView.classList.remove('hidden');
-      els.userTitle.textContent = `Ciao ${user.name}`;
-      els.userAmount.textContent = formatCurrency(user.amount);
-      els.userPhrase.textContent = user.phrase || 'Messaggio non disponibile.';
-    }
-
-    function openAdminView() {
-      els.loginView.classList.add('hidden');
-      els.userView.classList.add('hidden');
-      els.adminView.classList.remove('hidden');
-      renderUsersList();
-      if (!selectedUserId && users[0]) {
-        fillEditor(users[0].id);
-      }
-      if (!users.length) {
-        clearEditor();
-      }
-    }
-
-    function goToLogin() {
-      els.loginView.classList.remove('hidden');
-      els.userView.classList.add('hidden');
-      els.adminView.classList.add('hidden');
-      els.loginStatus.textContent = 'Area di accesso simulata ad uso privato.';
-      els.loginStatus.className = 'status';
-      els.loginForm.reset();
-      toggleAdminField();
-    }
-
-    function toggleAdminField() {
-      const normalized = normalizePhone(els.phoneInput.value);
-      const adminPhone = normalizePhone(settings.adminPhone);
-      const show = normalized === adminPhone;
-      els.adminPasswordWrap.classList.toggle('visible', show);
-      els.adminPasswordInput.required = show;
-      if (!show) els.adminPasswordInput.value = '';
-    }
-
-    function fillEditor(id) {
-      const user = users.find(u => u.id === id);
-      if (!user) return;
-      selectedUserId = id;
-      els.editId.value = user.id;
-      els.editName.value = user.name;
-      els.editPhone.value = user.phone;
-      els.editAmount.value = user.amount;
-      els.editPhrase.value = user.phrase;
-      els.editorTitle.textContent = `Modifica: ${user.name}`;
-      els.editorStatus.textContent = 'Stai modificando un utente esistente.';
-      els.editorStatus.className = 'status';
-      els.deleteBtn.classList.remove('hidden');
-      renderUsersList();
-}
-
-    function clearEditor() {
-      selectedUserId = null;
-      els.editorForm.reset();
-      els.editId.value = '';
-      els.editorTitle.textContent = 'Nuovo utente';
-      els.editorStatus.textContent = 'Compila i campi per aggiungere un nuovo utente.';
-      els.editorStatus.className = 'status';
-      els.deleteBtn.classList.add('hidden');
-      renderUsersList();
-}
-
-    function saveUserFromEditor() {
-      const id = els.editId.value || crypto.randomUUID();
-      const name = els.editName.value.trim();
-      const phone = normalizePhone(els.editPhone.value);
-      const amount = els.editAmount.value.trim().replace(',', '.');
-      const phrase = els.editPhrase.value.trim();
-      const adminPhone = normalizePhone(settings.adminPhone);
-
-      if (!name || !phone || !amount) {
-        els.editorStatus.textContent = 'Nome, numero e importo sono obbligatori.';
-        els.editorStatus.className = 'status err';
-        return;
-      }
-
-      if (phone === adminPhone) {
-        els.editorStatus.textContent = 'Questo numero è riservato all’accesso amministratore e non può essere assegnato a un utente.';
-        els.editorStatus.className = 'status err';
-        return;
-      }
-
-      const duplicatePhone = users.some(u => u.phone === phone && u.id !== id);
-      if (duplicatePhone) {
-        els.editorStatus.textContent = 'Esiste già un utente con questo numero.';
-        els.editorStatus.className = 'status err';
-        return;
-      }
-
-      const payload = { id, name, phone, amount, phrase };
-      const idx = users.findIndex(u => u.id === id);
-      if (idx >= 0) {
-        users[idx] = payload;
-      } else {
-        users.unshift(payload);
-      }
-      persist();
-      fillEditor(id);
-      els.editorStatus.textContent = 'Utente salvato correttamente nel browser.';
-      els.editorStatus.className = 'status ok';
-}
-
-    function deleteCurrentUser() {
-      if (!selectedUserId) return;
-      const current = users.find(u => u.id === selectedUserId);
-      const ok = confirm(`Eliminare ${current?.name || 'questo utente'}?`);
-      if (!ok) return;
-      users = users.filter(u => u.id !== selectedUserId);
-      persist();
-      clearEditor();
-      if (users[0]) {
-        fillEditor(users[0].id);
-      }
-      els.editorStatus.textContent = 'Utente eliminato.';
-      els.editorStatus.className = 'status ok';
-}
-
-    function duplicateCurrentUser() {
-      const name = els.editName.value.trim();
-      const amount = els.editAmount.value.trim();
-      const phrase = els.editPhrase.value.trim();
-      if (!name) {
-        els.editorStatus.textContent = 'Seleziona prima un utente da duplicare.';
-        els.editorStatus.className = 'status err';
-        return;
-      }
-      clearEditor();
-      els.editName.value = `${name} copia`;
-      els.editAmount.value = amount;
-      els.editPhrase.value = phrase;
-      els.editorStatus.textContent = 'Duplica pronta: inserisci un nuovo numero e salva.';
-      els.editorStatus.className = 'status';
-}
-
-    function exportBackup() {
-      const blob = new Blob([JSON.stringify({ settings, users }, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'backup-pasquetta-app.json';
-      a.click();
-      URL.revokeObjectURL(url);
-}
-
-    function resetDemoData() {
-      const ok = confirm('Vuoi davvero ripristinare i dati demo locali? Le modifiche salvate su questo browser andranno perse.');
-      if (!ok) return;
-      users = structuredClone(defaultUsers);
-      settings = structuredClone(defaultSettings);
-      persist();
-      clearEditor();
-      goToLogin();
-}
-
-    els.phoneInput.addEventListener('input', toggleAdminField);
-
-    els.loginForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const phone = normalizePhone(els.phoneInput.value);
-      const adminPhone = normalizePhone(settings.adminPhone);
-
-      if (!phone) {
-        els.loginStatus.textContent = 'Inserisci un numero valido.';
-        els.loginStatus.className = 'status err';
-        return;
-      }
-
-      if (phone === adminPhone) {
-        if (!els.adminPasswordInput.value) {
-          els.loginStatus.textContent = 'Inserisci la password amministratore per proseguire.';
-          els.loginStatus.className = 'status err';
-          return;
+        const res = await fetch("data.json"); // cerca sul repo (GitHub Pages)
+        let data;
+        if (!res.ok) {
+          console.warn("data.json non trovato, uso fallback.");
+          data = fallbackData;
+        } else {
+          data = await res.json();
         }
-        if (els.adminPasswordInput.value !== settings.adminPassword) {
-          els.loginStatus.textContent = 'Password amministratore non corretta.';
-          els.loginStatus.className = 'status err';
-          return;
-        }
-        openAdminView();
-        return;
-      }
 
-      const user = users.find(u => normalizePhone(u.phone) === phone);
-      if (!user) {
-        els.loginStatus.textContent = 'Utente non trovato. Controlla il numero inserito.';
-        els.loginStatus.className = 'status err';
-        return;
-      }
+        // mostra nome/frase
+        nomeEl.textContent   = "Nome: " + (data.nome || "Anonimo");
+        fraseEl.textContent  = "Frase: " + (data.frase || "Buona Pasquetta!");
+        contentEl.style.display = "block";
 
-      openUserView(user);
+      } catch (err) {
+        console.error("Errore lettura JSON:", err);
+        showError("Errore nel caricamento dei dati. Viene utilizzata la demo.");
+        nomeEl.textContent  = "Nome: " + fallbackData.nome;
+        fraseEl.textContent = "Frase: " + fallbackData.frase;
+        contentEl.style.display = "block";
+      }
+    }
+
+    // --- mostra errore ---
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = "block";
+    }
+
+    // --- collega bottone al click ---
+    btnLogin.addEventListener("click", () => {
+      verificaAccesso();
     });
 
-    els.backToLoginBtn.addEventListener('click', goToLogin);
-    els.logoutAdminBtn.addEventListener('click', goToLogin);
-    els.newUserBtn.addEventListener('click', clearEditor);
-    els.deleteBtn.addEventListener('click', deleteCurrentUser);
-    els.duplicateBtn.addEventListener('click', duplicateCurrentUser);
-    els.exportBtn.addEventListener('click', exportBackup);
-    // Non mostriamo più resetDemoData nell’interfaccia
-
-    els.editorForm.addEventListener('submit', e => {
-      e.preventDefault();
-      saveUserFromEditor();
-    });
-
-    els.usersList.addEventListener('click', e => {
-      const editBtn = e.target.closest('[data-edit-id]');
-      const previewBtn = e.target.closest('[data-preview-id]');
-      if (editBtn) fillEditor(editBtn.dataset.editId);
-      if (previewBtn) {
-        const user = users.find(u => u.id === previewBtn.dataset.previewId);
-        if (user) openUserView(user);
+    // --- abilita Enter su input
+    inputNumber.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        verificaAccesso();
       }
     });
-
-    els.themeToggle.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      els.themeToggle.textContent = next === 'dark' ? 'Tema chiaro' : 'Tema scuro';
-});
-
-    (function initTheme() {
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-      els.themeToggle.textContent = prefersDark ? 'Tema chiaro' : 'Tema scuro';
-})();
-
-    // Inizializzazione iniziale
-    clearEditor();
-    persist();
-      // 🔍 DEBUG: premi F12 per vedere
-console.log('DEBUG: window.utenti =', window.utenti);
-console.log('DEBUG: input trovati:', document.querySelectorAll('input'));
-      alert('TEST: Sito caricato! Dati utenti: ' + JSON.stringify(window.utenti || 'vuoto'));
   </script>
+</body>
+</html>
 </body>
 </html>
