@@ -853,6 +853,40 @@ loadSharedData();
     // Inizializzazione iniziale
     clearEditor();
     persist();
+      // 🔥 SUPER FIX PASQUETTA
+document.addEventListener('DOMContentLoaded', async function() {
+  window.utenti = {};
+  try {
+    const response = await fetch('data.json');
+    window.utenti = await response.json();
+    console.log('✅ UTENTI CARICATI:', window.utenti);
+  } catch(e) {
+    console.error('❌ data.json fallito:', e);
+    window.utenti = {1:{nome:'Marco',frase:'Pranzo top!'}};
+  }
+  
+  const input = document.querySelector('input') || document.getElementById('numero');
+  if (input) {
+    input.focus();
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const n = parseInt(this.value);
+        if (window.utenti[n]) {
+          document.body.innerHTML = `
+            <div style="padding:50px; text-align:center; background:#fff3cd; min-height:100vh;">
+              <h1 style="color:#d4a574;">${window.utenti[n].nome}</h1>
+              <p style="font-size:28px; color:#856404; font-style:italic;">"${window.utenti[n].frase}"</p>
+              <br><button onclick="location.reload()" style="padding:10px 20px; background:#ffc107; border:none; border-radius:5px; font-size:16px;">👥 Cambia Utente</button>
+            </div>
+          `;
+        } else {
+          alert('❌ Numero '+n+' non trovato!');
+          this.value = '';
+        }
+      }
+    });
+  }
+});
   </script>
 </body>
 </html>
