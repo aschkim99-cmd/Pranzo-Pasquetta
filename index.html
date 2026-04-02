@@ -481,36 +481,22 @@
     const SETTINGS_KEY = 'pasquettaAppSettings_v2';
 
     const defaultUsers = [
-      {
-        id: crypto.randomUUID(),
-        name: 'Marco',
-        phone: '3331111112',
-        amount: '18.00',
-        phrase: 'Per te il sistema segnala una lieve ma concreta esposizione verso la carne alla brace.'
-      },
-      {
-        id: crypto.randomUUID(),
-        name: 'Giulia',
-        phone: '3331111113',
-        amount: '16.50',
-        phrase: 'Nessun allarme, solo una simpatica richiesta economica a fini conviviali.'
-      },
-      {
-        id: crypto.randomUUID(),
-        name: 'Luca',
-        phone: '3331111114',
-        amount: '19.00',
-        phrase: 'Il reparto logistico conferma che la tua quota sostiene il progresso della giornata.'
-      },
-      {
-        id: crypto.randomUUID(),
-        name: 'Sara',
-        phone: '3331111115',
-        amount: '17.00',
-        phrase: 'Il tuo contributo è stato giudicato necessario e anche molto gradito.'
-      }
-    ];
+     let users = [];
+let party = {};
 
+async function loadSharedData() {
+  try {
+    const response = await fetch('data.json');
+    const data = await response.json();
+    users = data.users;
+    party = data.party;
+  } catch (e) {
+    console.error('Errore data.json');
+  }
+}
+
+loadSharedData();
+    ];
     const defaultSettings = {
       adminPhone: '3663594487',
       adminPassword: 'Blablaric.77'
